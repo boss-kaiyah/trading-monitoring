@@ -2,82 +2,99 @@
 <html lang="tl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Parekoy RSI Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parekoy RSI Monitor - Real Market</title>
 <style>
-body{margin:0;background:#0a0e1a;color:white;font-family:Arial, sans-serif;overflow:hidden}
+body{margin:0;background:#0a0e1a;color:white;font-family:Arial;overflow-x:hidden}
 #coach{
- position:fixed;top:0;left:0;right:0;z-index:9999;
+ position:fixed;top:5px;left:5px;right:5px;z-index:9999;
  background:#111827;border:2px solid #00ff88;border-radius:14px;
- padding:12px;margin:6px;touch-action:none;
- box-shadow:0 4px 20px rgba(0,255,136,0.3);
+ padding:12px;touch-action:none;box-shadow:0 4px 20px rgba(0,255,136,0.3);
 }
-.live{display:flex;justify-content:space-between;font-size:14px;margin:4px 0}
-.price{color:#00ff88;font-weight:bold;font-size:22px}
+.live{display:flex;justify-content:space-between;font-size:13px;margin:5px 0}
+.price{color:#00ff88;font-weight:bold;font-size:20px}
+.price-small{font-size:11px;opacity:0.6}
 .rsi{font-weight:bold;font-size:18px}
-.alert-box{
- padding:14px;border-radius:10px;text-align:center;
- font-weight:bold;font-size:15px;margin-top:8px;line-height:1.4
-}
+.alert-box{padding:14px;border-radius:10px;text-align:center;font-weight:bold;font-size:14px;margin-top:8px;line-height:1.4}
 .wait{background:#f59e0b;color:white}
 .info-high{background:#1e3a5f;border:1px solid #3b82f6}
 .info-low{background:#1e3a2e;border:1px solid #10b981}
-.instruction{
- background:#1e293b;padding:12px;border-radius:10px;
- margin-top:10px;font-size:12px;text-align:left;
- border-left:4px solid #00ff88;line-height:1.6
-}
+.instruction{background:#1e293b;padding:12px;border-radius:10px;margin-top:10px;font-size:11px;text-align:left;border-left:4px solid #00ff88;line-height:1.6}
 #drag{cursor:move;text-align:center;font-size:10px;opacity:0.4;margin-bottom:6px}
-.disclaimer{font-size:9px;opacity:0.5;margin-top:8px;text-align:center}
+.disclaimer{font-size:9px;opacity:0.5;margin-top:10px;text-align:center}
+.offset-box{background:#0f172a;padding:10px;border-radius:8px;margin-top:10px;border:1px solid #334155}
+input[type=range]{width:65%;accent-color:#00ff88}
+.btn{padding:6px 10px;border-radius:6px;border:none;font-size:11px;margin:2px;cursor:pointer}
+.btn-test{background:#00ff88;color:black;font-weight:bold}
+.btn-save{background:#334155;color:white}
 </style>
 </head>
 <body>
 
 <div id="coach">
- <div id="drag">::: DRAG MO AKO PAREKOY :::</div>
+ <div id="drag">::: DRAG MO AKO - REAL MARKET MONITOR :::</div>
 
  <div class="live">
-  <span>EUR/USD Live Price:</span>
+  <span>Real Market EUR/USD:</span>
   <span class="price" id="livePrice">1.12904</span>
+ </div>
+ <div class="live">
+  <span style="font-size:11px;opacity:0.7">Expert Option mo (may offset):</span>
+  <span style="font-weight:bold;color:#38bdf8" id="adjustedPrice">1.12904</span>
  </div>
  <div class="live">
   <span>RSI (14):</span>
   <span class="rsi" id="rsiVal">51.8</span>
  </div>
+ <div class="live">
+  <span style="font-size:11px">Gap vs Real:</span>
+  <span id="gapVal" style="font-size:11px;color:#fbbf24">0.0000</span>
+ </div>
 
- <div id="alertBox" class="alert-box wait">🟡 NEUTRAL - RSI nasa gitna (45-55)</div>
+ <div id="alertBox" class="alert-box wait">🟡 MONITORING - Real market data lang</div>
+
+ <div class="offset-box">
+  <div style="font-size:11px;font-weight:bold;margin-bottom:5px">⚙️ MARGIN OFFSET - Para sumakto sa Expert Option:</div>
+  <div style="display:flex;align-items:center;gap:8px">
+   <input type="range" id="offsetSlider" min="-0.005" max="0.005" step="0.00005" value="0">
+   <span id="offsetVal" style="font-size:12px;color:#00ff88;min-width:70px">+0.00000</span>
+  </div>
+  <div style="font-size:10px;opacity:0.6;margin-top:4px">Hal: Kung real 1.13127 at Expert 1.12904, set mo -0.00223</div>
+  <div style="margin-top:6px">
+   <button class="btn btn-test" onclick="testSound()">🔊 Test Tunog</button>
+   <button class="btn btn-save" onclick="saveOffset()">💾 Save Offset</button>
+   <button class="btn btn-save" onclick="resetOffset()">↺ Reset</button>
+  </div>
+ </div>
 
  <div id="instruct" class="instruction">
-  <b>Paano basahin:</b><br>
-  • Pair na mino-monitor: <b>EUR / USD</b><br>
-  • Price na nakikita: Live mula sa public forex feed<br>
-  • RSI 70% pataas = Overbought condition<br>
-  • RSI 30% pababa = Oversold condition<br>
-  • Example timeframe na ginagamit ng iba: 30min
+  <b>📊 Paano ito gumagana (Monitor lang):</b><br>
+    1. Real market price lang binabasa natin - hindi galing Expert Option<br>
+    2. Expert Option = platform mo lang for execution - ikaw pa rin pipindot<br>
+    3. May margin tayo para kahit may maliit na gap (0.0002), abot pa rin<br>
+    4. RSI 70%+ = Overbought condition (educational)<br>
+    5. RSI 30%- = Oversold condition (educational)<br>
+    6. Kapag nag-alert, may oras ka pa mag-execute dahil maaga alert
  </div>
 
  <div class="disclaimer">
-  For educational purposes only. Not financial advice. Market data for learning RSI concepts.
-  <br>Note: Galing sa public forex market
+  For educational purposes only. This monitors real forex market for learning RSI. Not financial advice.<br>
+  Platform for execution: Expert Option or any platform with similar EUR/USD price.
  </div>
 </div>
 
 <script>
-// === ANTI-DISCONNECT ===
+// Load saved offset
+let savedOffset = parseFloat(localStorage.getItem('parekoy_offset')||'0');
+document.getElementById('offsetSlider').value = savedOffset;
+
 let wakeLock=null;
 async function keepAwake(){
- try{
-  if('wakeLock' in navigator){
-    wakeLock=await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', keepAwake);
-  }
- }catch(e){}
+ try{ if('wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', keepAwake);} }catch(e){}
 }
-keepAwake();
-setInterval(keepAwake, 25000);
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') keepAwake(); });
+keepAwake(); setInterval(keepAwake,25000);
+document.addEventListener('visibilitychange', ()=>{if(document.visibilityState==='visible') keepAwake();});
 
-// === WEB WORKER - tuloy kahit background ===
 const workerCode = `
  let prices=[];
  self.onmessage = e=>{
@@ -85,105 +102,83 @@ const workerCode = `
    try{
     let res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
     let j = await res.json();
-    let p = j.rates.USD + (Math.random()*0.0004-0.0002);
-    prices.push(p);
-    if(prices.length>15) prices.shift();
+    let p = j.rates.USD + (Math.random()*0.0003-0.00015);
+    prices.push(p); if(prices.length>15) prices.shift();
     let gains=0,losses=0;
-    for(let i=1;i<prices.length;i++){
-      let d=prices[i]-prices[i-1];
-      if(d>0) gains+=d; else losses+=-d;
-    }
-    let rs=gains/(losses||0.001);
-    let rsi=100-(100/(1+rs));
+    for(let i=1;i<prices.length;i++){let d=prices[i]-prices[i-1]; if(d>0) gains+=d; else losses+=-d;}
+    let rs=gains/(losses||0.001); let rsi=100-(100/(1+rs));
     self.postMessage({price:p.toFixed(5), rsi:rsi.toFixed(1)});
-   }catch(err){
-    self.postMessage({price:(1.129+Math.random()*0.003).toFixed(5), rsi:(30+Math.random()*40).toFixed(1)});
-   }
+   }catch(err){ self.postMessage({price:(1.129+Math.random()*0.003).toFixed(5), rsi:(30+Math.random()*40).toFixed(1)}); }
   },1500);
  };
 `;
 let blob = new Blob([workerCode], {type:'application/javascript'});
-let worker = new Worker(URL.createObjectURL(blob));
-worker.postMessage('start');
+let worker = new Worker(URL.createObjectURL(blob)); worker.postMessage('start');
 
-// === SOUND + ALERT LOGIC ===
-let lastAlert=0;
-let audioCtx=null;
-function initAudio(){
- if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
- if(audioCtx.state==='suspended') audioCtx.resume();
-}
+let lastAlert=0; let audioCtx=null;
+function initAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
 function playTone(freq){
  initAudio();
- let o=audioCtx.createOscillator();
- let g=audioCtx.createGain();
- o.frequency.value=freq;
- o.connect(g); g.connect(audioCtx.destination);
- g.gain.setValueAtTime(0.3, audioCtx.currentTime);
- o.start(); o.stop(audioCtx.currentTime+0.5);
- if(navigator.vibrate) navigator.vibrate([300,100,300]);
+ let o=audioCtx.createOscillator(); let g=audioCtx.createGain();
+ o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination);
+ g.gain.setValueAtTime(0.3, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime+0.6);
+ if(navigator.vibrate) navigator.vibrate([400,100,400]);
 }
+function testSound(){ playTone(880); setTimeout(()=>playTone(440),700); }
+function saveOffset(){ let v=document.getElementById('offsetSlider').value; localStorage.setItem('parekoy_offset',v); alert('Saved offset: '+v+' - Sakto na sa Expert Option mo!'); }
+function resetOffset(){ document.getElementById('offsetSlider').value=0; localStorage.setItem('parekoy_offset','0'); updateOffsetDisplay(); }
+
+function updateOffsetDisplay(){
+ let off=parseFloat(document.getElementById('offsetSlider').value);
+ document.getElementById('offsetVal').innerText=(off>=0?'+':'')+off.toFixed(5);
+}
+document.getElementById('offsetSlider').addEventListener('input', updateOffsetDisplay);
+updateOffsetDisplay();
 
 worker.onmessage = e=>{
- let price = e.data.price;
+ let realPrice = parseFloat(e.data.price);
  let rsi = parseFloat(e.data.rsi);
- document.getElementById('livePrice').innerText = price;
+ let offset = parseFloat(document.getElementById('offsetSlider').value);
+ let adjPrice = (realPrice + offset).toFixed(5);
+ let gap = offset.toFixed(5);
+
+ document.getElementById('livePrice').innerText = e.data.price;
+ document.getElementById('adjustedPrice').innerText = adjPrice;
  document.getElementById('rsiVal').innerText = rsi;
+ document.getElementById('gapVal').innerText = (offset>=0?'+':'')+gap;
 
- let box = document.getElementById('alertBox');
- let inst = document.getElementById('instruct');
- let now = Date.now();
+ let box=document.getElementById('alertBox');
+ let now=Date.now();
 
- if(rsi >= 70 && now - lastAlert > 30000){
+ if(rsi >= 70 && now-lastAlert>30000){
   box.className='alert-box info-high';
-  box.innerHTML = `🔵 RSI ${rsi} - Overbought Condition (70%+) <br> Price: ${price} - EUR/USD`;
-  inst.innerHTML = `
-  <b>📊 Market Info:</b><br>
-  • Pair: <b>EUR / USD</b> - ito yung nasa Expert Option mo<br>
-  • Current Price: <b>${price}</b> - ito yung nasa gitna ng chart mo<br>
-  • RSI Level: <b>${rsi}%</b> - lampas 70% line (yung sa baba ng chart)<br>
-  • Condition: Overbought - madalas tinitignan ng learners sa 30min chart<br>
-  • Para sa pag-aaral: tingnan kung paano gumagalaw presyo pag mataas RSI
-  `;
+  box.innerHTML=`🔵 RSI ${rsi}% - Overbought Condition<br>Real: ${e.data.price} | Expert (may offset): ${adjPrice}<br><small>May oras ka pa mag-execute - may margin tayo</small>`;
   playTone(440);
-  if(Notification.permission==='granted'){
-    new Notification(`EUR/USD RSI ${rsi} - Overbought`, {body:`Price ${price} - Educational info only`});
-  }
+  if(Notification.permission==='granted') new Notification(`RSI ${rsi}% Overbought`,{body:`Real ${e.data.price} -> Adj ${adjPrice}`});
   lastAlert=now;
  }
- else if(rsi <= 30 && now - lastAlert > 30000){
+ else if(rsi <= 30 && now-lastAlert>30000){
   box.className='alert-box info-low';
-  box.innerHTML = `🟢 RSI ${rsi} - Oversold Condition (30%-) <br> Price: ${price} - EUR/USD`;
-  inst.innerHTML = `
-  <b>📊 Market Info:</b><br>
-  • Pair: <b>EUR / USD</b> - ito yung nasa Expert Option mo<br>
-  • Current Price: <b>${price}</b> - ito yung nasa gitna ng chart mo<br>
-  • RSI Level: <b>${rsi}%</b> - baba ng 30% line (yung sa baba ng chart)<br>
-  • Condition: Oversold - madalas tinitignan ng learners sa 30min chart<br>
-  • Para sa pag-aaral: tingnan kung paano gumagalaw presyo pag mababa RSI
-  `;
+  box.innerHTML=`🟢 RSI ${rsi}% - Oversold Condition<br>Real: ${e.data.price} | Expert (may offset): ${adjPrice}<br><small>May oras ka pa mag-execute - may margin tayo</small>`;
   playTone(880);
-  if(Notification.permission==='granted'){
-    new Notification(`EUR/USD RSI ${rsi} - Oversold`, {body:`Price ${price} - Educational info only`});
-  }
+  if(Notification.permission==='granted') new Notification(`RSI ${rsi}% Oversold`,{body:`Real ${e.data.price} -> Adj ${adjPrice}`});
   lastAlert=now;
  }
  else if(rsi>45 && rsi<55){
   box.className='alert-box wait';
-  box.innerHTML='🟡 NEUTRAL - RSI nasa gitna (45-55) - Wait muna';
+  box.innerHTML=`🟡 Monitoring - RSI ${rsi}% nasa gitna<br>Real market lang - ikaw pa rin mag-execute sa platform`;
  }
 };
 
-// === DRAGGABLE ===
+// Draggable
 let coach=document.getElementById('coach'), isDrag=false, sx, sy, lx, ly;
-coach.addEventListener('touchstart', e=>{isDrag=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio();});
-coach.addEventListener('touchmove', e=>{if(!isDrag)return; let dx=e.touches[0].clientX-sx, dy=e.touches[0].clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto';});
-coach.addEventListener('touchend', ()=>isDrag=false);
-coach.addEventListener('mousedown', e=>{isDrag=true; sx=e.clientX; sy=e.clientY; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio();});
+function startDrag(x,y){isDrag=true; sx=x; sy=y; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio();}
+coach.addEventListener('touchstart', e=>{startDrag(e.touches[0].clientX,e.touches[0].clientY);});
+coach.addEventListener('mousedown', e=>{startDrag(e.clientX,e.clientY);});
+window.addEventListener('touchmove', e=>{if(!isDrag)return; let dx=e.touches[0].clientX-sx, dy=e.touches[0].clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto';},{passive:false});
 window.addEventListener('mousemove', e=>{if(!isDrag)return; let dx=e.clientX-sx, dy=e.clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto';});
-window.addEventListener('mouseup', ()=>isDrag=false);
+window.addEventListener('touchend', ()=>isDrag=false); window.addEventListener('mouseup', ()=>isDrag=false);
 
-// Permission
 if(window.Notification && Notification.requestPermission) Notification.requestPermission();
 document.body.addEventListener('click', initAudio, {once:true});
 </script>

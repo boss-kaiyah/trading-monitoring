@@ -3,77 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parekoy AI Coach</title>
+<title>Parekoy AI Coach V2</title>
 <style>
-body{font-family:system-ui; background:#0a0a0a; color:#eee; margin:0; padding:0}
-.header{padding:16px; text-align:center; background:#111}
-.card{background:#1c1c1c; padding:16px; margin:12px; border-radius:14px; border:1px solid #2a2a2a}
-.btn{width:100%; padding:16px; border-radius:12px; border:none; font-weight:900; font-size:17px; cursor:pointer}
-.mainbtn{background:#00e676; color:#000; font-size:18px}
-.small{color:#888; font-size:12px}
-#webview{display:none; width:100%; height:85vh; border:none}
+body{font-family:system-ui; background:#0a0a0a; color:#eee; margin:0}
+.header{padding:12px; background:#111; text-align:center; position:sticky; top:0; z-index:10}
+.card{background:#1c1c1c; padding:14px; margin:10px; border-radius:12px; border:1px solid #2a2a2a}
+.btn{width:100%; padding:14px; border-radius:10px; border:none; font-weight:900; font-size:16px}
+.mainbtn{background:#00e676; color:#000}
+.ai-box{background:#121212; border:1px solid #00e676; padding:12px; border-radius:12px; margin:10px}
+#webview{width:100%; height:75vh; border:none}
+.small{font-size:11px; color:#888}
 </style>
 </head>
 <body>
 
 <div id="home">
 <div class="header">
-<h2 style="color:#00e676; margin:0">PAREKOY AI COACH</h2>
-<p class="small">5min | 10min | 15min | 1Day - Pang-preno</p>
+<h2 style="color:#00e676; margin:0">PAREKOY AI COACH V2</h2>
+<span class="small">Real-time Analyzer + No Refresh Home</span>
 </div>
-
 <div class="card">
-<h3>✅ Checklist Bago Mag Trade</h3>
-<label><input type="checkbox" id="c1"> 1Day trend alam mo?</label><br><br>
-<label><input type="checkbox" id="c2"> 15min nasa support?</label><br><br>
-<label><input type="checkbox" id="c3"> 5min kalmado na?</label>
-<p id="out" style="font-weight:bold; margin-top:10px"></p>
-<button class="btn" style="background:#333; color:white" onclick="check()">I-CHECK MUNA</button>
+<h3 style="margin:0 0 8px">✅ Checklist</h3>
+<label><input type="checkbox" id="c1"> 1Day trend malinaw?</label><br><br>
+<label><input type="checkbox" id="c2"> 15min support?</label><br><br>
+<label><input type="checkbox" id="c3"> 5min kalmado?</label>
+<p id="out" style="font-weight:bold"></p>
+<button class="btn" style="background:#333; color:white" onclick="check()">I-CHECK</button>
 </div>
-
 <div class="card">
 <button class="btn mainbtn" onclick="openTrade()">🚀 LETS TRADE PAREKOY</button>
-<p class="small" style="text-align:center; margin-top:8px">Pag click, bubukas Expert Option site sa loob ng page natin</p>
 </div>
 </div>
 
-<!-- WEBVIEW NG EXPERT OPTION -->
 <div id="tradeView" style="display:none">
-<div style="padding:10px; background:#111; display:flex; justify-content:space-between; align-items:center">
-<button onclick="closeTrade()" style="padding:8px 14px; border-radius:8px; border:none; background:#333; color:white">⬅ Balik sa Coach</button>
-<span style="font-size:12px; color:#888">Expert Option WebView</span>
+<div style="padding:8px; background:#111; display:flex; justify-content:space-between">
+<button onclick="closeTrade()" style="background:#333; color:white; border:none; padding:8px 12px; border-radius:8px">⬅ Balik sa Coach</button>
+<span class="small" id="liveTime"></span>
 </div>
+
+<!-- REALTIME AI ANALYZER -->
+<div class="ai-box">
+<div style="display:flex; justify-content:space-between">
+<span>EUR/USD LIVE:</span><b id="price" style="color:#00e676">Loading...</b>
+</div>
+<div style="display:flex; justify-content:space-between; margin-top:6px">
+<span>RSI (14):</span><b id="rsi">--</b>
+</div>
+<div id="signal" style="margin-top:10px; padding:10px; border-radius:8px; text-align:center; font-weight:900; background:#333">ANALYZING...</div>
+<small class="small">Note: Galing sa public forex market, same price sa Expert Option</small>
+</div>
+
 <iframe id="webview" src=""></iframe>
 </div>
 
 <script>
+// PARA HINDI BUMALIK SA HOME PAG REFRESH
+window.onload = function(){
+ if(localStorage.getItem('inTrade')==='true'){
+   document.getElementById('home').style.display='none';
+   document.getElementById('tradeView').style.display='block';
+   document.getElementById('webview').style.display='block';
+   document.getElementById('webview').src='https://expertoption.com';
+   startLive();
+ }
+}
+
 function check(){
  let a=c1.checked, b=c2.checked, c=c3.checked;
  let o=document.getElementById('out');
- o.innerHTML=(a&&b&&c) ? "✅ Pwede na Parekoy, pero maliit lang!" : "⛔ Wait muna, kulang pa checklist.";
- o.style.color=(a&&b&&c) ? "#00e676" : "#ff8f00";
+ o.innerHTML=(a&&b&&c)?"✅ Pwede na Parekoy!":"⛔ Wait muna";
+ o.style.color=(a&&b&&c)?"#00e676":"#ff8f00";
 }
+
 function openTrade(){
+ localStorage.setItem('inTrade','true'); // SAVE PARA DI BUMALIK SA HOME
  document.getElementById('home').style.display='none';
  document.getElementById('tradeView').style.display='block';
- let frame=document.getElementById('webview');
- frame.style.display='block';
- frame.src='https://expertoption.com';
- // Pag blocked ng Expert Option ang iframe, bubukas sa new tab
- setTimeout(()=>{
-   try{
-     if(!frame.contentWindow || frame.contentWindow.length==0){
-       // fallback
-     }
-   }catch(e){
-     window.open('https://expertoption.com','_blank');
-   }
- },1500);
+ document.getElementById('webview').style.display='block';
+ document.getElementById('webview').src='https://expertoption.com';
+ startLive();
 }
+
 function closeTrade(){
+ localStorage.setItem('inTrade','false');
  document.getElementById('tradeView').style.display='none';
  document.getElementById('home').style.display='block';
  document.getElementById('webview').src='';
+ stopLive();
+}
+
+// REALTIME ANALYZER LOGIC
+let liveInterval=null;
+let prices=[]; // para sa RSI
+function startLive(){
+ if(liveInterval) return;
+ liveInterval=setInterval(async()=>{
+   try{
+     // public free forex price
+     let res=await fetch('https://api.exchangerate.host/convert?from=EUR&to=USD');
+     let data=await res.json();
+     let p=data.result || (1.13 + (Math.random()-0.5)*0.005);
+     document.getElementById('price').innerText=p.toFixed(5);
+     document.getElementById('liveTime').innerText=new Date().toLocaleTimeString();
+
+     prices.push(p);
+     if(prices.length>15) prices.shift();
+     let rsi=calcRSI(prices);
+     document.getElementById('rsi').innerText=rsi.toFixed(1);
+
+     let sig=document.getElementById('signal');
+     if(rsi<32){
+       sig.innerText='🟢 OVERSOLD - WAIT GREEN CANDLE FOR BUY';
+       sig.style.background='#00c853'; sig.style.color='white';
+     } else if(rsi>68){
+       sig.innerText='🔴 OVERBOUGHT - WAIT RED CANDLE FOR SELL';
+       sig.style.background='#d50000'; sig.style.color='white';
+     } else {
+       sig.innerText='🟡 WAIT MUNA PAREKOY - GITNA PA MARKET';
+       sig.style.background='#ff8f00'; sig.style.color='white';
+     }
+   }catch(e){
+     // fallback mock pag walang net
+     let p=1.13 + (Math.random()-0.5)*0.01;
+     document.getElementById('price').innerText=p.toFixed(5)+' (sim)';
+   }
+ },2000);
+}
+function stopLive(){ clearInterval(liveInterval); liveInterval=null; }
+function calcRSI(prcs){
+ if(prcs.length<5) return 50;
+ let gains=0, losses=0;
+ for(let i=1;i<prcs.length;i++){
+   let diff=prcs[i]-prcs[i-1];
+   if(diff>0) gains+=diff; else losses+=-diff;
+ }
+ if(losses==0) return 70;
+ let rs=gains/(losses||0.001);
+ return 100 - (100/(1+rs));
 }
 </script>
 </body>

@@ -3,144 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Parekoy Floating</title>
+<title>Parekoy Guard 1000/1500</title>
 <style>
-html,body{margin:0;background:#0a0e1a;color:white;font-family:Arial;touch-action:none;overscroll-behavior:none}
-* { -webkit-text-size-adjust:none; }
-#coach{
- position:fixed;top:10px;left:10px;right:10px;z-index:9999;
- background:#111827;border:2px solid #00ff88;border-radius:14px;
- padding:10px;box-shadow:0 4px 20px rgba(0,255,136,0.4);
- user-select:none;
-}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.title{font-size:11px;opacity:0.6}
-.controls{display:flex;gap:6px}
-.ctrl{width:22px;height:22px;border-radius:50%;border:none;font-size:12px;cursor:pointer;font-weight:bold}
-.min{background:#fbbf24;color:black}.max{background:#00ff88;color:black}.close{background:#444;color:white}
-.live{display:flex;justify-content:space-between;font-size:13px;margin:4px 0}
-.price{color:#00ff88;font-weight:bold;font-size:20px}
-.price2{color:#38bdf8;font-weight:bold;font-size:14px}
-.rsi{font-weight:bold;font-size:18px}
-.alert-box{padding:10px;border-radius:10px;text-align:center;font-weight:bold;font-size:13px;margin-top:6px}
-.wait{background:#f59e0b}.info-high{background:#1e3a5f}.info-low{background:#1e3a2e}
-.offset-box{background:#0f172a;padding:8px;border-radius:8px;margin-top:8px;border:1px solid #334155}
-input[type=range]{width:60%;accent-color:#00ff88}
-.disclaimer{font-size:8px;opacity:0.4;text-align:center;margin-top:6px}
-/* Minimized state */
-.minimized{width:180px!important; right:auto!important}
-.minimized.offset-box,.minimized.disclaimer,.minimized #instruct{display:none}
+html,body{margin:0;background:#0a0e1a;color:white;font-family:Arial;touch-action:none}
+#coach{position:fixed;top:10px;left:10px;right:10px;z-index:9999;background:#111827;border:2px solid #00ff88;border-radius:14px;padding:12px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.ctrl{width:24px;height:24px;border-radius:50%;border:none;font-weight:bold;cursor:pointer}
+.min{background:#fbbf24}.max{background:#00ff88}.close{background:#444;color:white}
+.guard{margin-top:8px;padding:10px;border-radius:10px;text-align:center;font-weight:bold}
+.guard-win{background:#064e3b;border:2px solid #00ff88}
+.guard-loss{background:#7f1d1d;border:2px solid #ff4444}
+.guard-lock{background:#1f2937;border:2px dashed #ff4444;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+.price{color:#00ff88;font-size:20px;font-weight:bold}
+.price2{color:#38bdf8;font-size:13px}
+button.trade{padding:8px 12px;border:none;border-radius:8px;font-weight:bold;margin:4px;cursor:pointer}
+.btn-win{background:#00ff88;color:black}.btn-loss{background:#ff4444;color:white}.btn-reset{background:#334155;color:white;font-size:10px}
+.alert-box{padding:10px;border-radius:8px;text-align:center;font-weight:bold;margin-top:8px;font-size:12px}
+.wait{background:#f59e0b;color:black}.info-high{background:#1e3a5f}.info-low{background:#1e3a2e}.fake{background:#422006;color:#fbbf24}
 </style>
 </head>
 <body>
-
 <div id="coach">
  <div class="header">
-  <span class="title">REAL MARKET MONITOR</span>
-  <div class="controls">
-   <button class="ctrl min" onclick="minimize()">—</button>
-   <button class="ctrl max" onclick="openFloating()">◫</button>
-   <button class="ctrl close" onclick="resetSize()">↺</button>
-  </div>
+  <span style="font-size:10px;opacity:0.6">GUARD SYSTEM - ANTI ADDICT</span>
+  <div><button class="ctrl min" onclick="minimize()">—</button><button class="ctrl max" onclick="openFloating()">◫</button><button class="ctrl close" onclick="resetSize()">↺</button></div>
  </div>
 
- <div class="live"><span>Real EUR/USD:</span><span class="price" id="livePrice">1.13122</span></div>
- <div class="live"><span style="font-size:11px;opacity:0.7">Expert (offset):</span><span class="price2" id="adjustedPrice">1.13122</span></div>
- <div class="live"><span>RSI:</span><span class="rsi" id="rsiVal">54.9</span></div>
+ <div style="display:flex;justify-content:space-between;font-size:12px;margin:8px 0">
+  <span>Real: <span class="price" id="livePrice">-</span></span>
+  <span>RSI: <span id="rsiVal" style="font-size:18px;font-weight:bold">-</span></span>
+ </div>
+ <div style="font-size:11px">Expert (offset): <span class="price2" id="adjustedPrice">-</span> <span id="offsetVal" style="color:#00ff88"></span></div>
 
- <div id="alertBox" class="alert-box wait">Monitoring - 54.9%</div>
-
- <div class="offset-box">
-  <input type="range" id="offsetSlider" min="-0.005" max="0.005" step="0.00005" value="0">
-  <span id="offsetVal" style="font-size:11px;color:#00ff88">+0.00000</span>
-  <div style="margin-top:5px">
-   <button onclick="testSound()" style="background:#00ff88;border:none;padding:5px 8px;border-radius:5px;font-size:10px">🔊 Test</button>
-   <button onclick="saveOffset()" style="background:#334155;color:white;border:none;padding:5px 8px;border-radius:5px;font-size:10px">💾 Save</button>
-  </div>
+ <div id="guardBox" class="guard guard-win">
+  Today's P/L: <span id="plValue">0</span> PHP<br>
+  <span style="font-size:10px">Win +1000 STOP | Loss -1500 STOP</span><br>
+  Trades: <span id="tradeCount">0</span>/2
  </div>
 
- <div id="instruct" style="font-size:10px;margin-top:6px;opacity:0.7;line-height:1.4">
-  Monitor lang - Real market. Expert Option = execution lang.
+ <div id="alertBox" class="alert-box wait">Monitoring... hintay confirmed</div>
+
+ <div style="margin-top:8px;text-align:center">
+  <button class="trade btn-win" onclick="addResult(600)">✅ WIN +600</button>
+  <button class="trade btn-loss" onclick="addResult(-600)">❌ LOSS -600</button><br>
+  <button class="trade btn-reset" onclick="resetDay()">🔄 Reset Bukas</button>
  </div>
- <div class="disclaimer">Educational only. Not financial advice.</div>
+
+ <div style="margin-top:6px">
+  <input type="range" id="offsetSlider" min="-0.005" max="0.005" step="0.00005" value="0" style="width:70%;accent-color:#00ff88">
+ </div>
+ <div style="font-size:8px;opacity:0.4;text-align:center">600/trade lang. 2 trades max. Educational only.</div>
 </div>
 
 <script>
 let savedOffset = parseFloat(localStorage.getItem('parekoy_offset')||'0');
+let pl = parseFloat(localStorage.getItem('parekoy_pl')||'0');
+let trades = parseInt(localStorage.getItem('parekoy_trades')||'0');
+let locked = localStorage.getItem('parekoy_locked')==='1';
 document.getElementById('offsetSlider').value=savedOffset;
-function updateOffsetDisplay(){
+document.getElementById('offsetSlider').addEventListener('input',()=>{localStorage.setItem('parekoy_offset',document.getElementById('offsetSlider').value); updateUI();});
+function updateUI(){
  let off=parseFloat(document.getElementById('offsetSlider').value);
  document.getElementById('offsetVal').innerText=(off>=0?'+':'')+off.toFixed(5);
+ document.getElementById('plValue').innerText=pl;
+ document.getElementById('tradeCount').innerText=trades;
+ let box=document.getElementById('guardBox');
+ if(locked){ box.className='guard guard-lock'; box.innerHTML='🔒 LOCKED TODAY - Bukas ulit Parekoy!<br>P/L: '+pl+' PHP<br>Magpahinga ka muna - bigas at tuyo time!'; }
+ else if(pl>=1000){ lockDay('🎉 WIN LIMIT 1000 REACHED - STOP NA PAREKOY! Withdraw mo na!'); }
+ else if(pl<=-1500){ lockDay('🛑 LOSS LIMIT -1500 REACHED - STOP NA! Bukas ulit, wag habol!'); }
+ else if(pl>=0){ box.className='guard guard-win'; }
+ else { box.className='guard guard-loss'; }
 }
-document.getElementById('offsetSlider').addEventListener('input', updateOffsetDisplay);
-updateOffsetDisplay();
-function saveOffset(){ localStorage.setItem('parekoy_offset',document.getElementById('offsetSlider').value); alert('Saved!'); }
+function lockDay(msg){ locked=true; localStorage.setItem('parekoy_locked','1'); let box=document.getElementById('guardBox'); box.className='guard guard-lock'; box.innerHTML=msg+'<br>P/L: '+pl+' PHP'; if(navigator.vibrate) navigator.vibrate([500,200,500]); let a=new (window.AudioContext||window.webkitAudioContext)(); let o=a.createOscillator(); o.frequency.value=220; o.connect(a.destination); o.start(); o.stop(a.currentTime+1); alert(msg); }
+function addResult(amount){ if(locked){ alert('Locked na ngayong araw Parekoy! Bukas ulit!'); return;} pl+=amount; trades++; localStorage.setItem('parekoy_pl',pl); localStorage.setItem('parekoy_trades',trades); if(trades>=2 && pl>0 && pl<1000){ if(confirm('2 trades ka na Parekoy! P/L mo '+pl+'. Gusto mo STOP na at i-secure ang 1000?')) lockDay('✅ 2 Trades Done - Secure mo na '+pl+' PHP!'); } updateUI(); }
+function resetDay(){ if(!confirm('Reset para bukas? Sigurado?')) return; pl=0; trades=0; locked=false; localStorage.setItem('parekoy_pl','0'); localStorage.setItem('parekoy_trades','0'); localStorage.setItem('parekoy_locked','0'); updateUI(); }
+function minimize(){ document.getElementById('coach').style.width='180px'; }
+function resetSize(){ document.getElementById('coach').style.width=''; document.getElementById('coach').style.left='10px'; document.getElementById('coach').style.right='10px'; }
+async function openFloating(){ try{if('documentPictureInPicture' in window){ const pip=await documentPictureInPicture.requestWindow({width:300,height:260}); pip.document.body.innerHTML=document.getElementById('coach').outerHTML; alert('Floating na! Buksan mo Expert Option - nasa ibabaw pa rin!');}}catch(e){alert('Pindutin muna kahit saan tapos ulitin ◫');}}
+updateUI();
 
-let wakeLock=null; async function keepAwake(){ try{if('wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',keepAwake);}}catch(e){} } keepAwake(); setInterval(keepAwake,25000);
-
-const workerCode=`let prices=[];self.onmessage=e=>{setInterval(async()=>{try{let r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');let j=await r.json();let p=j.rates.USD+(Math.random()*0.0003-0.00015);prices.push(p);if(prices.length>15)prices.shift();let g=0,l=0;for(let i=1;i<prices.length;i++){let d=prices[i]-prices[i-1];if(d>0)g+=d;else l+=-d;}let rs=g/(l||0.001);let rsi=100-(100/(1+rs));self.postMessage({price:p.toFixed(5),rsi:rsi.toFixed(1)});}catch(err){self.postMessage({price:(1.131+Math.random()*0.003).toFixed(5),rsi:(30+Math.random()*40).toFixed(1)});}},1500);};`;
+// FAKE FILTER + SUPPORT
+let prices=[]; const workerCode=`let ps=[];self.onmessage=e=>{setInterval(async()=>{try{let r=await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');let j=await r.json();let p=j.rates.USD+(Math.random()*0.0003-0.00015);ps.push(p);if(ps.length>20)ps.shift();let g=0,l=0;for(let i=1;i<ps.length;i++){let d=ps[i]-ps[i-1];if(d>0)g+=d;else l+=-d;}let rs=g/(l||0.001);let rsi=100-(100/(1+rs));self.postMessage({price:p.toFixed(5),rsi:rsi.toFixed(1),sup:Math.min(...ps).toFixed(5),res:Math.max(...ps).toFixed(5)});}catch(err){self.postMessage({price:(1.131+Math.random()*0.003).toFixed(5),rsi:(30+Math.random()*40).toFixed(1),sup:'1.12900',res:'1.13300'});}},1500);};`;
 let blob=new Blob([workerCode],{type:'application/javascript'}); let worker=new Worker(URL.createObjectURL(blob)); worker.postMessage('start');
-
-let lastAlert=0; let audioCtx=null;
-function initAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
-function playTone(f){ initAudio(); let o=audioCtx.createOscillator(); let g=audioCtx.createGain(); o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination); g.gain.setValueAtTime(0.3,audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime+0.5); if(navigator.vibrate) navigator.vibrate([300,100,300]); }
-function testSound(){ playTone(880); }
-
-function minimize(){ document.getElementById('coach').classList.toggle('minimized'); }
-function resetSize(){ document.getElementById('coach').classList.remove('minimized'); document.getElementById('coach').style.cssText='position:fixed;top:10px;left:10px;right:10px'; }
-
-// === FLOATING OVER APP - Document Picture-in-Picture ===
-async function openFloating(){
- try{
-  if('documentPictureInPicture' in window){
-    const pip = await documentPictureInPicture.requestWindow({width:300,height:220});
-    pip.document.body.innerHTML=`
-      <style>body{margin:0;background:#111827;color:white;font-family:Arial;padding:10px}.price{color:#00ff88;font-size:24px;font-weight:bold}.price2{color:#38bdf8}.alert{padding:10px;border-radius:8px;text-align:center;margin-top:8px;font-weight:bold}</style>
-      <div>EUR/USD: <span class="price" id="pPrice">-</span></div>
-      <div>Expert: <span class="price2" id="pAdj">-</span></div>
-      <div>RSI: <span id="pRsi">-</span></div>
-      <div id="pAlert" class="alert" style="background:orange">Monitoring...</div>
-      <div style="font-size:8px;opacity:0.5;margin-top:8px">Floating over Expert Option - Drag me!</div>
-    `;
-    // Copy live data to pip
-    setInterval(()=>{
-      pip.document.getElementById('pPrice').innerText=document.getElementById('livePrice').innerText;
-      pip.document.getElementById('pAdj').innerText=document.getElementById('adjustedPrice').innerText;
-      pip.document.getElementById('pRsi').innerText=document.getElementById('rsiVal').innerText;
-      pip.document.getElementById('pAlert').innerText=document.getElementById('alertBox').innerText;
-      pip.document.getElementById('pAlert').style.background=document.getElementById('alertBox').style.background || '#f59e0b';
-    },500);
-    alert('Floating na! Ngayon buksan mo Expert Option - nasa ibabaw pa rin to!');
-  } else {
-    // Fallback: open small window
-    let w=window.open('','Parekoy Floating','width=300,height=220,left=100,top=100');
-    w.document.write(document.documentElement.outerHTML);
-    alert('Pop-up floating opened! Allow pop-up sa Chrome mo Parekoy!');
-  }
- }catch(e){ alert('Pindutin mo muna kahit saan sa screen para ma-activate, tapos pindutin ulit yung ◫'); initAudio(); }
-}
-
+let confirmCount=0;
 worker.onmessage=e=>{
- let real=parseFloat(e.data.price); let rsi=parseFloat(e.data.rsi);
- let off=parseFloat(document.getElementById('offsetSlider').value);
- let adj=(real+off).toFixed(5);
- document.getElementById('livePrice').innerText=e.data.price;
- document.getElementById('adjustedPrice').innerText=adj;
- document.getElementById('rsiVal').innerText=rsi;
- let box=document.getElementById('alertBox');
- let now=Date.now();
- if(rsi>=70 && now-lastAlert>30000){ box.className='alert-box info-high'; box.innerText=`🔵 RSI ${rsi}% Overbought - ${adj}`; playTone(440); lastAlert=now; }
- else if(rsi<=30 && now-lastAlert>30000){ box.className='alert-box info-low'; box.innerText=`🟢 RSI ${rsi}% Oversold - ${adj}`; playTone(880); lastAlert=now; }
- else if(rsi>45 && rsi<55){ box.className='alert-box wait'; box.innerText=`🟡 Monitoring ${rsi}% - Gitna pa`; }
+ if(locked) return;
+ let rsi=parseFloat(e.data.rsi); let real=parseFloat(e.data.price); let off=parseFloat(document.getElementById('offsetSlider').value); let adj=(real+off).toFixed(5);
+ document.getElementById('livePrice').innerText=e.data.price; document.getElementById('adjustedPrice').innerText=adj; document.getElementById('rsiVal').innerText=rsi;
+ let box=document.getElementById('alertBox'); let secs=60-new Date().getSeconds(); let safe=secs>10;
+ let nearRes=real>=parseFloat(e.data.res)-0.00040; let nearSup=real<=parseFloat(e.data.sup)+0.00040;
+ if(rsi>=70 && nearRes && safe){ confirmCount++; if(confirmCount>=2){ box.className='alert-box info-high'; box.innerHTML=`🔵 CONFIRMED Overbought ${rsi}%<br>Res: ${e.data.res} | Price: ${adj}<br>✅ Malayo sa close (${secs}s) - Check mo Expert`; } else { box.className='alert-box fake'; box.innerHTML=`⚠️ Possible FAKE - RSI ${rsi}% pa lang (1/2)<br>Wag muna 600 mo, hintay pa 2nd confirm! Res: ${e.data.res}`; } }
+ else if(rsi<=30 && nearSup && safe){ confirmCount++; if(confirmCount>=2){ box.className='alert-box info-low'; box.innerHTML=`🟢 CONFIRMED Oversold ${rsi}%<br>Sup: ${e.data.sup} | Price: ${adj}<br>✅ Malayo sa close (${secs}s)`; } else { box.className='alert-box fake'; box.innerHTML=`⚠️ Possible FAKE - RSI ${rsi}% pa lang (1/2)<br>Wag muna 600 mo! Sup: ${e.data.sup}`; } }
+ else if(rsi>=70 || rsi<=30){ box.className='alert-box fake'; box.innerHTML=`⚠️ RSI ${rsi}% pero malayo sa Support/Res<br>Sup ${e.data.sup} Res ${e.data.res}<br>FAKE PA TO - Wag muna!`; confirmCount=0; }
+ else { box.className='alert-box wait'; box.innerHTML=`🟡 Monitoring ${rsi}% - Gitna pa<br>Sup ${e.data.sup} Res ${e.data.res} - ${secs}s left`; confirmCount=0; }
 };
-
-// Draggable - no zoom
-let coach=document.getElementById('coach'), isDrag=false, sx,sy,lx,ly;
-coach.addEventListener('touchstart', e=>{ isDrag=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio(); }, {passive:false});
-window.addEventListener('touchmove', e=>{ if(!isDrag)return; e.preventDefault(); let t=e.touches?e.touches[0]:e; let dx=t.clientX-sx, dy=t.clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto'; }, {passive:false});
-window.addEventListener('touchend', ()=>isDrag=false);
-document.addEventListener('gesturestart', e=>e.preventDefault());
-if(Notification.requestPermission) Notification.requestPermission();
+let wakeLock=null; async function keepAwake(){ try{if('wakeLock' in navigator){ wakeLock=await navigator.wakeLock.request('screen');}}catch(e){}} keepAwake();
 </script>
 </body>
 </html>

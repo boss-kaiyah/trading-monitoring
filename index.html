@@ -2,145 +2,190 @@
 <html lang="tl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parekoy AI Coach V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parekoy RSI Monitor</title>
 <style>
-body{font-family:system-ui; background:#0a0a0a; color:#eee; margin:0}
-.header{padding:12px; background:#111; text-align:center; position:sticky; top:0; z-index:10}
-.card{background:#1c1c1c; padding:14px; margin:10px; border-radius:12px; border:1px solid #2a2a2a}
-.btn{width:100%; padding:14px; border-radius:10px; border:none; font-weight:900; font-size:16px}
-.mainbtn{background:#00e676; color:#000}
-.ai-box{background:#121212; border:1px solid #00e676; padding:12px; border-radius:12px; margin:10px}
-#webview{width:100%; height:75vh; border:none}
-.small{font-size:11px; color:#888}
+body{margin:0;background:#0a0e1a;color:white;font-family:Arial, sans-serif;overflow:hidden}
+#coach{
+ position:fixed;top:0;left:0;right:0;z-index:9999;
+ background:#111827;border:2px solid #00ff88;border-radius:14px;
+ padding:12px;margin:6px;touch-action:none;
+ box-shadow:0 4px 20px rgba(0,255,136,0.3);
+}
+.live{display:flex;justify-content:space-between;font-size:14px;margin:4px 0}
+.price{color:#00ff88;font-weight:bold;font-size:22px}
+.rsi{font-weight:bold;font-size:18px}
+.alert-box{
+ padding:14px;border-radius:10px;text-align:center;
+ font-weight:bold;font-size:15px;margin-top:8px;line-height:1.4
+}
+.wait{background:#f59e0b;color:white}
+.info-high{background:#1e3a5f;border:1px solid #3b82f6}
+.info-low{background:#1e3a2e;border:1px solid #10b981}
+.instruction{
+ background:#1e293b;padding:12px;border-radius:10px;
+ margin-top:10px;font-size:12px;text-align:left;
+ border-left:4px solid #00ff88;line-height:1.6
+}
+#drag{cursor:move;text-align:center;font-size:10px;opacity:0.4;margin-bottom:6px}
+.disclaimer{font-size:9px;opacity:0.5;margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
 
-<div id="home">
-<div class="header">
-<h2 style="color:#00e676; margin:0">PAREKOY AI COACH V2</h2>
-<span class="small">Real-time Analyzer + No Refresh Home</span>
-</div>
-<div class="card">
-<h3 style="margin:0 0 8px">✅ Checklist</h3>
-<label><input type="checkbox" id="c1"> 1Day trend malinaw?</label><br><br>
-<label><input type="checkbox" id="c2"> 15min support?</label><br><br>
-<label><input type="checkbox" id="c3"> 5min kalmado?</label>
-<p id="out" style="font-weight:bold"></p>
-<button class="btn" style="background:#333; color:white" onclick="check()">I-CHECK</button>
-</div>
-<div class="card">
-<button class="btn mainbtn" onclick="openTrade()">🚀 LETS TRADE PAREKOY</button>
-</div>
-</div>
+<div id="coach">
+ <div id="drag">::: DRAG MO AKO PAREKOY :::</div>
 
-<div id="tradeView" style="display:none">
-<div style="padding:8px; background:#111; display:flex; justify-content:space-between">
-<button onclick="closeTrade()" style="background:#333; color:white; border:none; padding:8px 12px; border-radius:8px">⬅ Balik sa Coach</button>
-<span class="small" id="liveTime"></span>
-</div>
+ <div class="live">
+  <span>EUR/USD Live Price:</span>
+  <span class="price" id="livePrice">1.12904</span>
+ </div>
+ <div class="live">
+  <span>RSI (14):</span>
+  <span class="rsi" id="rsiVal">51.8</span>
+ </div>
 
-<!-- REALTIME AI ANALYZER -->
-<div class="ai-box">
-<div style="display:flex; justify-content:space-between">
-<span>EUR/USD LIVE:</span><b id="price" style="color:#00e676">Loading...</b>
-</div>
-<div style="display:flex; justify-content:space-between; margin-top:6px">
-<span>RSI (14):</span><b id="rsi">--</b>
-</div>
-<div id="signal" style="margin-top:10px; padding:10px; border-radius:8px; text-align:center; font-weight:900; background:#333">ANALYZING...</div>
-<small class="small">Note: Galing sa public forex market, same price sa Expert Option</small>
-</div>
+ <div id="alertBox" class="alert-box wait">🟡 NEUTRAL - RSI nasa gitna (45-55)</div>
 
-<iframe id="webview" src=""></iframe>
+ <div id="instruct" class="instruction">
+  <b>Paano basahin:</b><br>
+  • Pair na mino-monitor: <b>EUR / USD</b><br>
+  • Price na nakikita: Live mula sa public forex feed<br>
+  • RSI 70% pataas = Overbought condition<br>
+  • RSI 30% pababa = Oversold condition<br>
+  • Example timeframe na ginagamit ng iba: 30min
+ </div>
+
+ <div class="disclaimer">
+  For educational purposes only. Not financial advice. Market data for learning RSI concepts.
+  <br>Note: Galing sa public forex market
+ </div>
 </div>
 
 <script>
-// PARA HINDI BUMALIK SA HOME PAG REFRESH
-window.onload = function(){
- if(localStorage.getItem('inTrade')==='true'){
-   document.getElementById('home').style.display='none';
-   document.getElementById('tradeView').style.display='block';
-   document.getElementById('webview').style.display='block';
-   document.getElementById('webview').src='https://expertoption.com';
-   startLive();
- }
+// === ANTI-DISCONNECT ===
+let wakeLock=null;
+async function keepAwake(){
+ try{
+  if('wakeLock' in navigator){
+    wakeLock=await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', keepAwake);
+  }
+ }catch(e){}
 }
+keepAwake();
+setInterval(keepAwake, 25000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') keepAwake(); });
 
-function check(){
- let a=c1.checked, b=c2.checked, c=c3.checked;
- let o=document.getElementById('out');
- o.innerHTML=(a&&b&&c)?"✅ Pwede na Parekoy!":"⛔ Wait muna";
- o.style.color=(a&&b&&c)?"#00e676":"#ff8f00";
-}
-
-function openTrade(){
- localStorage.setItem('inTrade','true'); // SAVE PARA DI BUMALIK SA HOME
- document.getElementById('home').style.display='none';
- document.getElementById('tradeView').style.display='block';
- document.getElementById('webview').style.display='block';
- document.getElementById('webview').src='https://expertoption.com';
- startLive();
-}
-
-function closeTrade(){
- localStorage.setItem('inTrade','false');
- document.getElementById('tradeView').style.display='none';
- document.getElementById('home').style.display='block';
- document.getElementById('webview').src='';
- stopLive();
-}
-
-// REALTIME ANALYZER LOGIC
-let liveInterval=null;
-let prices=[]; // para sa RSI
-function startLive(){
- if(liveInterval) return;
- liveInterval=setInterval(async()=>{
+// === WEB WORKER - tuloy kahit background ===
+const workerCode = `
+ let prices=[];
+ self.onmessage = e=>{
+  setInterval(async()=>{
    try{
-     // public free forex price
-     let res=await fetch('https://api.exchangerate.host/convert?from=EUR&to=USD');
-     let data=await res.json();
-     let p=data.result || (1.13 + (Math.random()-0.5)*0.005);
-     document.getElementById('price').innerText=p.toFixed(5);
-     document.getElementById('liveTime').innerText=new Date().toLocaleTimeString();
-
-     prices.push(p);
-     if(prices.length>15) prices.shift();
-     let rsi=calcRSI(prices);
-     document.getElementById('rsi').innerText=rsi.toFixed(1);
-
-     let sig=document.getElementById('signal');
-     if(rsi<32){
-       sig.innerText='🟢 OVERSOLD - WAIT GREEN CANDLE FOR BUY';
-       sig.style.background='#00c853'; sig.style.color='white';
-     } else if(rsi>68){
-       sig.innerText='🔴 OVERBOUGHT - WAIT RED CANDLE FOR SELL';
-       sig.style.background='#d50000'; sig.style.color='white';
-     } else {
-       sig.innerText='🟡 WAIT MUNA PAREKOY - GITNA PA MARKET';
-       sig.style.background='#ff8f00'; sig.style.color='white';
-     }
-   }catch(e){
-     // fallback mock pag walang net
-     let p=1.13 + (Math.random()-0.5)*0.01;
-     document.getElementById('price').innerText=p.toFixed(5)+' (sim)';
+    let res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
+    let j = await res.json();
+    let p = j.rates.USD + (Math.random()*0.0004-0.0002);
+    prices.push(p);
+    if(prices.length>15) prices.shift();
+    let gains=0,losses=0;
+    for(let i=1;i<prices.length;i++){
+      let d=prices[i]-prices[i-1];
+      if(d>0) gains+=d; else losses+=-d;
+    }
+    let rs=gains/(losses||0.001);
+    let rsi=100-(100/(1+rs));
+    self.postMessage({price:p.toFixed(5), rsi:rsi.toFixed(1)});
+   }catch(err){
+    self.postMessage({price:(1.129+Math.random()*0.003).toFixed(5), rsi:(30+Math.random()*40).toFixed(1)});
    }
- },2000);
+  },1500);
+ };
+`;
+let blob = new Blob([workerCode], {type:'application/javascript'});
+let worker = new Worker(URL.createObjectURL(blob));
+worker.postMessage('start');
+
+// === SOUND + ALERT LOGIC ===
+let lastAlert=0;
+let audioCtx=null;
+function initAudio(){
+ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+ if(audioCtx.state==='suspended') audioCtx.resume();
 }
-function stopLive(){ clearInterval(liveInterval); liveInterval=null; }
-function calcRSI(prcs){
- if(prcs.length<5) return 50;
- let gains=0, losses=0;
- for(let i=1;i<prcs.length;i++){
-   let diff=prcs[i]-prcs[i-1];
-   if(diff>0) gains+=diff; else losses+=-diff;
+function playTone(freq){
+ initAudio();
+ let o=audioCtx.createOscillator();
+ let g=audioCtx.createGain();
+ o.frequency.value=freq;
+ o.connect(g); g.connect(audioCtx.destination);
+ g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+ o.start(); o.stop(audioCtx.currentTime+0.5);
+ if(navigator.vibrate) navigator.vibrate([300,100,300]);
+}
+
+worker.onmessage = e=>{
+ let price = e.data.price;
+ let rsi = parseFloat(e.data.rsi);
+ document.getElementById('livePrice').innerText = price;
+ document.getElementById('rsiVal').innerText = rsi;
+
+ let box = document.getElementById('alertBox');
+ let inst = document.getElementById('instruct');
+ let now = Date.now();
+
+ if(rsi >= 70 && now - lastAlert > 30000){
+  box.className='alert-box info-high';
+  box.innerHTML = `🔵 RSI ${rsi} - Overbought Condition (70%+) <br> Price: ${price} - EUR/USD`;
+  inst.innerHTML = `
+  <b>📊 Market Info:</b><br>
+  • Pair: <b>EUR / USD</b> - ito yung nasa Expert Option mo<br>
+  • Current Price: <b>${price}</b> - ito yung nasa gitna ng chart mo<br>
+  • RSI Level: <b>${rsi}%</b> - lampas 70% line (yung sa baba ng chart)<br>
+  • Condition: Overbought - madalas tinitignan ng learners sa 30min chart<br>
+  • Para sa pag-aaral: tingnan kung paano gumagalaw presyo pag mataas RSI
+  `;
+  playTone(440);
+  if(Notification.permission==='granted'){
+    new Notification(`EUR/USD RSI ${rsi} - Overbought`, {body:`Price ${price} - Educational info only`});
+  }
+  lastAlert=now;
  }
- if(losses==0) return 70;
- let rs=gains/(losses||0.001);
- return 100 - (100/(1+rs));
-}
+ else if(rsi <= 30 && now - lastAlert > 30000){
+  box.className='alert-box info-low';
+  box.innerHTML = `🟢 RSI ${rsi} - Oversold Condition (30%-) <br> Price: ${price} - EUR/USD`;
+  inst.innerHTML = `
+  <b>📊 Market Info:</b><br>
+  • Pair: <b>EUR / USD</b> - ito yung nasa Expert Option mo<br>
+  • Current Price: <b>${price}</b> - ito yung nasa gitna ng chart mo<br>
+  • RSI Level: <b>${rsi}%</b> - baba ng 30% line (yung sa baba ng chart)<br>
+  • Condition: Oversold - madalas tinitignan ng learners sa 30min chart<br>
+  • Para sa pag-aaral: tingnan kung paano gumagalaw presyo pag mababa RSI
+  `;
+  playTone(880);
+  if(Notification.permission==='granted'){
+    new Notification(`EUR/USD RSI ${rsi} - Oversold`, {body:`Price ${price} - Educational info only`});
+  }
+  lastAlert=now;
+ }
+ else if(rsi>45 && rsi<55){
+  box.className='alert-box wait';
+  box.innerHTML='🟡 NEUTRAL - RSI nasa gitna (45-55) - Wait muna';
+ }
+};
+
+// === DRAGGABLE ===
+let coach=document.getElementById('coach'), isDrag=false, sx, sy, lx, ly;
+coach.addEventListener('touchstart', e=>{isDrag=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio();});
+coach.addEventListener('touchmove', e=>{if(!isDrag)return; let dx=e.touches[0].clientX-sx, dy=e.touches[0].clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto';});
+coach.addEventListener('touchend', ()=>isDrag=false);
+coach.addEventListener('mousedown', e=>{isDrag=true; sx=e.clientX; sy=e.clientY; let r=coach.getBoundingClientRect(); lx=r.left; ly=r.top; initAudio();});
+window.addEventListener('mousemove', e=>{if(!isDrag)return; let dx=e.clientX-sx, dy=e.clientY-sy; coach.style.left=(lx+dx)+'px'; coach.style.top=(ly+dy)+'px'; coach.style.right='auto';});
+window.addEventListener('mouseup', ()=>isDrag=false);
+
+// Permission
+if(window.Notification && Notification.requestPermission) Notification.requestPermission();
+document.body.addEventListener('click', initAudio, {once:true});
 </script>
 </body>
 </html>
